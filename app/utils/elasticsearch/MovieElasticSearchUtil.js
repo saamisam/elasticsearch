@@ -3,7 +3,9 @@ const elasticMappings = {
     mapping: movieElasticMapping.MOVIE_INDEX_SETTINGS_MAPPING
 };
 const elasticUtil = require('./ElasticSearchUtil');
-const MovieService = require('../../services/MovieService')
+const MovieService = require('../../services/MovieService');
+const config = require('../../config/custom');
+
 module.exports = {
     createNewIndex: function(newIndexName) {
         currentIndexName = newIndexName;
@@ -23,47 +25,47 @@ module.exports = {
     createMovieDocument : async function(row){
         var MovieData = {};
         return new Promise((resolve, reject)=> {
-            launchCountries = MovieService.getAdditionalData(row.id, (err, data) => {  
+            launchCountries = MovieService.getAdditionalData(row.id, (err, data) => {
                 if(err)
                     console.log('err', err);
                 else{
                     // images = images(data.image_name, function(err, val){
                     //     console.log('val', val);
                     // });
-                    // images = module.exports.processImage(data.image_name);
-                    // cast_crew = module.exports.processCast(data.cast_crew);
+                    images = module.exports.processImage(data.image_name);
+                    cast_crew = module.exports.processCast(data.cast_crew);
                     MovieData.duration = row.duration;
-                    // var seo = {}
-                    // seo.pageTitle = row.pageTitle;
-                    // seo.metaDescription = row.metaDescription;
-                    // seo.anchorText = row.anchorText;
-                    // seo.robotsMetaTag = row.robotsMetaTag;
-                    // MovieData.seo = seo;
-                    // MovieData.languages = [data.languages];
-                    // MovieData.globalLaunch = row.global_launch;
-                    // MovieData.genre = [data.genres];
+                    var seo = {}
+                    seo.pageTitle = row.page_title;
+                    seo.metaDescription = row.meta_description;
+                    seo.anchorText = row.anchor_text;
+                    seo.robotsMetaTag = row.robots_meta_tag;
+                    MovieData.seo = seo;
+                    MovieData.languages = [data.languages];
+                    MovieData.globalLaunch = (row.global_launch == 1) ? true : false;
+                    MovieData.genre = [data.genres];
                     MovieData.name = row.name;
-                    // MovieData.slug = row.slug;
-                    // MovieData.movie_details_id = row.movie_details_id;
-                    // MovieData.followCount = row.initial_followers_count;
-                    // MovieData.coverImage = images.cover;
-                    // MovieData.posterImage = images.poster;
-                    // MovieData.images = images.other;
-                    // MovieData.cast = cast_crew.cast;
-                    // MovieData.crew = cast_crew.crew;
-                    // MovieData.links = [data.links];
-                    // MovieData.videos = [];
-                    // MovieData.songVideos = [];
-                    // MovieData.shortDesc = row.short_description;
-                    // MovieData.launchDate =  row.launch_date;
-                    // MovieData.formattedLaunchDate = "";
-                    // MovieData.trailerUrl = "";
-                    // MovieData.videoYoutubeId = "";
-                    // MovieData.content_id = "";
-                    // MovieData.launchDateEpoch = "";
-                    // MovieData.keywords = "";
-                    // MovieData.popularity = "";
-                    // MovieData.objectID = row.id;
+                    MovieData.slug = row.slug;
+                    MovieData.movie_details_id = row.movie_details_id;
+                    MovieData.followCount = row.initial_followers_count;
+                    MovieData.coverImage = images.cover;
+                    MovieData.posterImage = images.poster;
+                    MovieData.images = images.other;
+                    MovieData.cast = cast_crew.cast;
+                    MovieData.crew = cast_crew.crew;
+                    MovieData.links = [data.links];
+                    MovieData.videos = [];
+                    MovieData.songVideos = [];
+                    MovieData.shortDesc = row.short_description;
+                    MovieData.launchDate =  row.launch_date;
+                    MovieData.formattedLaunchDate = "";
+                    MovieData.trailerUrl = "";
+                    MovieData.videoYoutubeId = "";
+                    MovieData.content_id = row.id;
+                    MovieData.launchDateEpoch = (row.launch_date).getTime() / 1000;
+                    MovieData.keywords = [data.keywords];
+                    MovieData.popularity = "";
+                    MovieData.objectID = row.id;
                     console.log("Document Prepartion DONE" + row.id);
         
                     resolve(MovieData);
@@ -88,7 +90,7 @@ module.exports = {
                     // console.log('beforesplit', image[2]);
                     dimension = image[2].replace('---\n','').replace('\n','').split('- ');
     
-                    console.log('dimension', dimension);
+                    // console.log('dimension', dimension);
                     otherImage.push(image[0]);
                 }
                 else if(image[1] == '2')
@@ -133,7 +135,7 @@ module.exports = {
           let contentCount = await MovieService.getCountContent();
           console.log("################### Total Count "+ contentCount +"################################");
           //contentCount = 100;
-          let limit = 2;
+          let limit = 100;
           let loopCount = contentCount / limit;
           let bulkUploadResults;
           console.log('loopcount', loopCount);
@@ -147,19 +149,21 @@ module.exports = {
             for (const result of results) {
               console.log("Document Prepartiom Start" + result.id);
               actionDersciption = {
-                index: {_index: newIndexName,_type: "movie",_id: result.id}
+                index: {
+                  _index: newIndexName,
+                  _type: "movie",
+                  _id: result.id
+                }
               };
-              let documentContent = null;
+              let documentContent;
               documentContent = await module.exports.createMovieDocument(result);
               bulk.push(actionDersciption);
               bulk.push(documentContent);
-              console.log('aaaaaa');
             }
-            console.log('bulk', bulk);
             if (bulk.length > 0) {
               bulkUploadResults = await bulkUploadAsync(bulk);
             }
-            return;
+            // return;
           }
           return bulkUploadResults;
         }
@@ -173,6 +177,53 @@ module.exports = {
           });
         });
         return promise;
-      }
+    },
+
+    toggleAlliasName: async function(newindex) {
+        async function removeAndUpdateAliasFromIndex(aliasNameContent, newindex) {
+          return elasticUtil.removeUpdateAlias(aliasNameContent, newindex);
+        }
+    
+        console.log(newindex);
+        let aliasNameContent = config.custom.EVENT_INDEX_NAME;
+        console.log('aliasName', aliasNameContent);
+        var promise = new Promise((resolve, reject) => {
+          removeAndUpdateAliasFromIndex(aliasNameContent, newindex)
+            .then(removeAliasStatus => {
+              console.log("list of indexex removwd");
+              console.log(removeAliasStatus);
+              resolve(removeAliasStatus);
+            })
+            .catch(err => {
+              console.log(err);
+              reject(err);
+            });
+        });
+        return promise;
+      }    
+
+    // toggleAlliasName: async function(newindex) {
+    //     async function removeAndUpdateAliasFromIndex(aliasNameContent, newindex) {
+    //       return elasticUtil.removeUpdateAlias(aliasNameContent, newindex);
+    //     }
+    
+    //     console.log(newindex);
+    //     let aliasNameContent = sails.config.custom.CONTENT_INDEX_NAME;
+    
+    //     var promise = new Promise((resolve, reject) => {
+    //       removeAndUpdateAliasFromIndex(aliasNameContent, newindex)
+    //         .then(removeAliasStatus => {
+    //           console.log("list of indexex removwd");
+    //           console.log(removeAliasStatus);
+    //           resolve(removeAliasStatus);
+    //         })
+    //         .catch(err => {
+    //           console.log(err);
+    //           reject(err);
+    //         });
+    //     });
+    //     return promise;
+    // }
+    
     
 }

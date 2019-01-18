@@ -1,5 +1,5 @@
 function generateMappingSettings() {
-    movieIndex = {
+    eventIndex = {
         settings: {
             index: {
             analysis: {
@@ -42,16 +42,31 @@ function generateMappingSettings() {
             }
         },
         mappings: {
-            "movie":{
+            "event":{
                 properties: {
                     launchCountries: {
                         "type": "keyword",
                         "store": true
                     },
-                    duration: {
-                        type: "text",
-                        index: false
+                    tickets: {
+                        properties: {
+                            name: {"type": "text", "index": false},
+                            startTime: {"type": "date", "index": false},
+                            endTime: {"type": "date", "index": false},
+                            bookingLink: {"type": "text", "index": false},
+                            minPrice: {"type": "integer", "index": false},
+                            maxPrice: {"type": "integer", "index": false}
+                        }
                     },
+                    // venue:{
+                    //     properties: {
+                    //         "name": {"type": "text", "index": false},
+                    //         "city": {"type": "text", "index": false},
+                    //         "gmap_link": {"type": "text", "index": false},
+                    //         "country": {"type": "text", "index": false},
+                    //         "address": {"type": "text", "index": false}
+                    //     }
+                    // },
                     seo: {
                         properties: {
                             pageTitle: {"type": "text", "index": false},
@@ -59,18 +74,6 @@ function generateMappingSettings() {
                             anchorText: {"type": "text", "index": false},
                             robotsMetaTag: {"type": "text", "index": false}
                         }
-                    },
-                    languages: {
-                        type: "keyword",
-                        store: true
-                    },
-                    globalLaunch: {
-                        type: "boolean",
-                        index: false
-                    },
-                    genre: {
-                        type: "keyword",
-                        store: true
                     },
                     name: {
                         type: "text",
@@ -80,13 +83,17 @@ function generateMappingSettings() {
                         type: "text",
                         index: false
                     },
-                    movie_details_id: {
-                        type: "integer",
-                        index: false
-                    },
                     followCount: {
                         type: "integer",
                         index: false
+                    },
+                    events_details_id: {
+                        type: "integer",
+                        index: false
+                    },
+                    genre: {
+                        type: "keyword",
+                        store: true
                     },
                     coverImage: {
                         type: "text",
@@ -96,61 +103,31 @@ function generateMappingSettings() {
                         type: "text",
                         index: false
                     },
-                    // images: {
-                    //     properties: {
-                    //         url: {
-                    //             type: "text",
-                    //             index: false
-                    //         },
-                    //         width: {
-                    //             type: "integer",
-                    //             index: false
-                    //         },
-                    //         height: {
-                    //             type: "integer",
-                    //             index: false
-                    //         }
-                    //     }
-                    // },
                     images: {
-                        type: "text"
+                        properties: {
+                            url: {"type": "text", "index": false},
+                            width: {"type": "integer", "index": false},
+                            height: {"type": "integer", "index": false}
+                        }
                     },
-                    cast: {
+                    artists: {
                         type: "keyword",
                         store: true
                     },
-                    crew: {
-                        type: "text"
-                    },
-                    // links: {
-                    //     properties: {
-                    //         name: {
-                    //             type: "text",
-                    //             index: false
-                    //         },
-                    //         url: {
-                    //             type: "text",
-                    //             index: false
-                    //         }
-                    //     }
-                    // },
                     links: {
-                        type: "text"
+                        properties: {
+                            url: {"type": "text", "index": false},
+                            name: {"type": "text", "index": false}
+                        }
                     },
                     videos: {
                         type: "text"
                     },
-                    songVideos: {
-                        properties: {
-                            youtube_id: {
-                                type: "text",
-                                index: false
-                            },
-                            youtube_title: {
-                                type: "text",
-                                index: false
-                            }
-                        }
+                    startTime: {
+                        type: "date", index: false
+                    },
+                    endTime: {
+                        type: "date", index: false
                     },
                     shortDesc: {
                         type: "text"
@@ -159,24 +136,20 @@ function generateMappingSettings() {
                         type: "date",
                         store: true
                     },
-                    formattedLaunchDate: {
-                        type: "text",
-                        index: false
-                    },
-                    trailerUrl: {
-                        type: "text"
-                    },
-                    videoYoutubeId: {
-                        type: "text"
-                    },
                     content_id: {
                         type: "integer"
                     },
                     launchDateEpoch: {
-                        type: "integer"
+                        type: "keyword",
+                        store: true
+                    },
+                    endDateEpoch: {
+                        type: "keyword",
+                        store: true
                     },
                     keywords: {
-                        type: "text"
+                        type: "keyword",
+                        store: true
                     },
                     popularity: {
                         type: "integer",
@@ -185,15 +158,18 @@ function generateMappingSettings() {
                     objectID: {
                         type: "text",
                         index: false
+                    },
+                    status: {
+                        type: "keyword",
+                        store: true
                     }
                 }
-
             }
         }
     };
-    return movieIndex;
+    return eventIndex;
   }
   
   module.exports = {
-    MOVIE_INDEX_SETTINGS_MAPPING: generateMappingSettings()
+    EVENT_INDEX_SETTINGS_MAPPING: generateMappingSettings()
   };
